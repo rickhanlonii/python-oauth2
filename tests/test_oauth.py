@@ -889,6 +889,27 @@ class TestRequest(unittest.TestCase, ReallyEqualMixin):
         req = oauth.Request.from_request("GET", url)
         self.assertEquals(None, req)
 
+    def test_from_request_with_realm(self):
+        url = "http://sp.example.com/"
+
+        params = {
+            'oauth_version': "1.0",
+            'oauth_nonce': "4572616e48616d6d65724c61686176",
+            'oauth_timestamp': "137131200",
+            'oauth_consumer_key': "0685bd9184jfhq22",
+            'oauth_signature_method': "HMAC-SHA1",
+            'oauth_token': "ad180jjd733klru7",
+            'oauth_signature': "wOJIO9A2W5mFwDgiDvZbTSMK%2Frealm",  # Signature contains "realm"
+        }
+
+        req = oauth.Request("GET", url, params)
+        headers = req.to_header()
+
+        # Test that oauth_signature was not removed from headers
+        req = oauth.Request.from_request("GET", url, headers)
+        self.assertEquals(req.method, "GET")
+        self.assertIsNotNone(req.get("oauth_signature"))
+
     def test_from_token_and_callback(self):
         url = "http://sp.example.com/"
 
