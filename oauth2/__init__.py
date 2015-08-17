@@ -62,7 +62,7 @@ except ImportError:
     # hashlib was added in Python 2.5
     import sha
 
-import _version
+from . import _version
 
 __version__ = _version.__version__
 
