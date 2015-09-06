@@ -237,8 +237,8 @@ class TestToken(unittest.TestCase):
         self.assertEqual(url, '%s%s' % (cb, verifier_str))
 
     def test_to_string_callback(self):
-        string = 'oauth_token_secret=%s&oauth_token=%s' % (self.secret,
-                                                           self.key)
+        string = 'oauth_token=%s&oauth_token_secret=%s' % (self.key,
+                                                           self.secret)
         self.assertEqual(self.token.to_string(), string)
 
         self.token.set_callback('http://www.example.com/my-callback')
@@ -257,7 +257,7 @@ class TestToken(unittest.TestCase):
 
     def test_to_string(self):
         tok = oauth.Token('tooken', 'seecret')
-        self.assertEqual(str(tok), 'oauth_token_secret=seecret&oauth_token=tooken')
+        self.assertEqual(str(tok), 'oauth_token=tooken&oauth_token_secret=seecret')
 
     def test_from_string(self):
         self.assertRaises(ValueError, lambda: oauth.Token.from_string(''))
@@ -425,7 +425,7 @@ class TestRequest(unittest.TestCase, ReallyEqualMixin):
         res = urlparse.urlparse(req.to_url())
 
         params['nonasciithing'] = params['nonasciithing'].encode('utf-8')
-        exp = urlparse.urlparse("%s?%s" % (url, urllib.urlencode(params)))
+        exp = urlparse.urlparse("%s?%s" % (url, urlencode(params)))
 
         self.assertEquals(exp.netloc, res.netloc)
         self.assertEquals(exp.path, res.path)
