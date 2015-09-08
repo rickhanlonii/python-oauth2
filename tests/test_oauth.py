@@ -172,7 +172,19 @@ class TestConsumer(unittest.TestCase):
         self.assertEqual(res['oauth_consumer_key'], self.consumer.key)
         self.assertEqual(res['oauth_consumer_secret'], self.consumer.secret)
 
-class TestToken(unittest.TestCase):
+
+class ReallyEqualMixin:
+    def failUnlessReallyEqual(self, a, b, msg=None):
+        self.assertEqual(a, b, msg=msg)
+        self.assertEqual(type(a), type(b), msg="a :: %r, b :: %r, %r" % (a, b, msg))
+
+    def failUnlessParamsReallyEqual(self, a, b, msg=None):
+        expected_dict = dict(item.strip().split("=") for item in a.split("&"))
+        test_dict = dict(item.strip().split("=") for item in b.split("&"))
+        self.failUnlessReallyEqual(expected_dict, test_dict, msg=msg)
+
+
+class TestToken(unittest.TestCase, ReallyEqualMixin):
     def setUp(self):
         self.key = 'my-key'
         self.secret = 'my-secret'
@@ -239,11 +251,11 @@ class TestToken(unittest.TestCase):
     def test_to_string_callback(self):
         string = 'oauth_token=%s&oauth_token_secret=%s' % (self.key,
                                                            self.secret)
-        self.assertEqual(self.token.to_string(), string)
+        self.failUnlessParamsReallyEqual(self.token.to_string(), string)
 
         self.token.set_callback('http://www.example.com/my-callback')
         string += '&oauth_callback_confirmed=true'
-        self.assertEqual(self.token.to_string(), string)
+        self.failUnlessParamsReallyEqual(self.token.to_string(), string)
 
     def _compare_tokens(self, new):
         self.assertEqual(self.token.key, new.key)
@@ -257,7 +269,7 @@ class TestToken(unittest.TestCase):
 
     def test_to_string(self):
         tok = oauth.Token('tooken', 'seecret')
-        self.assertEqual(str(tok), 'oauth_token=tooken&oauth_token_secret=seecret')
+        self.failUnlessParamsReallyEqual(str(tok), 'oauth_token=tooken&oauth_token_secret=seecret')
 
     def test_from_string(self):
         self.assertRaises(ValueError, lambda: oauth.Token.from_string(''))
@@ -279,11 +291,6 @@ class TestToken(unittest.TestCase):
         string = self.token.to_string()
         new = oauth.Token.from_string(string)
         self._compare_tokens(new)
-
-class ReallyEqualMixin:
-    def failUnlessReallyEqual(self, a, b, msg=None):
-        self.assertEqual(a, b, msg=msg)
-        self.assertEqual(type(a), type(b), msg="a :: %r, b :: %r, %r" % (a, b, msg))
 
 class TestFuncs(unittest.TestCase):
     def test_to_unicode(self):
@@ -509,7 +516,7 @@ class TestRequest(unittest.TestCase, ReallyEqualMixin):
 
         req = oauth.Request("GET", realm, params)
 
-        self.failUnlessReallyEqual(req.to_postdata(), 'nonasciithing=q%C2%BFu%C3%A9%20%2Caasp%20u%3F..a.s&oauth_nonce=4572616e48616d6d65724c61686176&oauth_timestamp=137131200&oauth_consumer_key=0685bd9184jfhq22&oauth_signature_method=HMAC-SHA1&oauth_version=1.0&oauth_token=ad180jjd733klru7&oauth_signature=wOJIO9A2W5mFwDgiDvZbTSMK%252FPY%253D')
+        self.failUnlessParamsReallyEqual(req.to_postdata(), 'nonasciithing=q%C2%BFu%C3%A9%20%2Caasp%20u%3F..a.s&oauth_nonce=4572616e48616d6d65724c61686176&oauth_timestamp=137131200&oauth_consumer_key=0685bd9184jfhq22&oauth_signature_method=HMAC-SHA1&oauth_version=1.0&oauth_token=ad180jjd733klru7&oauth_signature=wOJIO9A2W5mFwDgiDvZbTSMK%252FPY%253D')
 
     def test_to_postdata(self):
         realm = "http://sp.example.com/"
